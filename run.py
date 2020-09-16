@@ -1,6 +1,8 @@
 import requests
-import json
 from bs4 import BeautifulSoup
+import json
+import glob
+import pandas as pd
 
 session = requests.Session()
 
@@ -44,7 +46,7 @@ def get_url(page, catch_urls=[]):
 
 
 def get_detail(url):
-    print('getting detail....')
+    print('getting detail....url {}'.format(url))
     detail_response = session.get('http://localhost:5000'+url)
 
     # f_login = open('./resp.html', 'w+')
@@ -70,24 +72,38 @@ def get_detail(url):
         json.dump(dict_data, outfile)
 
 
+def create_csv():
+    files = sorted(glob.glob('./result/*.json'))
+
+    datas = []
+    for file in files:
+        with open(file) as json_file:
+            data = json.load(json_file)
+            datas.append(data)
+    data_frame = pd.DataFrame(datas)
+    data_frame.to_csv('result.csv', index=False)
+
+    print('csv file generated.. !')
+
+
 def run(urls=[]):
     pages = login()
 
-    # for i in range(pages):
-    #     page = i + 1
-    #     urls = urls + get_url(page)
-    #
-    #     with open('urls.json', 'w+') as outfile:
-    #         json.dump(urls, outfile)
+    for i in range(pages):
+        page = i + 1
+        urls = urls + get_url(page)
+
+        with open('urls.json', 'w+') as outfile:
+            json.dump(urls, outfile)
     # After json file created we can command line getting url request and use json file directly
 
-    # with open('urls.json') as json_file:
-    #    all_url = json.load(json_file)
+    with open('urls.json') as json_file:
+        all_url = json.load(json_file)
 
-    # for url in all_url:
-    #    get_detail(url)
+    for url in all_url:
+        get_detail(url)
 
-    get_detail('/mamypoko-good-night-pants-xxl-28-girls')
+    create_csv()
 
 
 if __name__ == '__main__':
